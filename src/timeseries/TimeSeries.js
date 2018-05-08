@@ -1,12 +1,10 @@
 import React, {Component} from 'react';
 import Highcharts from 'highcharts/highstock';
 import {
-    AreaSplineSeries,
     Chart,
     HighchartsStockChart,
     Legend,
     Navigator,
-    RangeSelector,
     SplineSeries,
     Title,
     Tooltip,
@@ -24,8 +22,12 @@ class TimeSeries extends Component {
     }
 
     render() {
-        const reviewCount = this.props.reviewCounts;
-        const avgRatings = this.props.averages;
+        const reviewCount = this.props.reviewCounts.map(item => [item[0], item[1]]);
+        const avgRatings = this.props.averages.map(item => [item[0], item[1]]);
+
+        if (reviewCount.length === 0) {
+            return <div/>;
+        }
 
         return (
             <div>

@@ -8,6 +8,7 @@ import PayloadForm from "../payload-form/PayloadForm";
 import CategoryTable from "../category-table/CategoryTable";
 import SelectAProjectComponent from "./SelectAProjectComponent";
 import TimeSeries from "../timeseries/TimeSeries";
+import moment from 'moment';
 
 class App extends Component {
 
@@ -78,11 +79,11 @@ class App extends Component {
             const data = response.data;
 
             const reviews = data.map(point => (
-                [point.reviewDate, point.reviewCount]
+                [isoStringToMillis(point.reviewDate), point.reviewCount]
             ));
 
             const averages = data.map(point => (
-                [point.reviewDate, point.average]
+                [isoStringToMillis(point.reviewDate), point.average]
             ));
 
             this.setState({reviewCounts: reviews, averages: averages});
@@ -91,30 +92,49 @@ class App extends Component {
     }
 
     handleFormSubmit(formData) {
+        const self = this;
         this.setState({formData: formData}, function () {
-            this.loadTopReviews(this.state.projectId);
+            self.loadTopReviews(self.state.projectId);
         });
     }
 
     onRangeSet(range) {
         this.setState({timeSeriesRange: range})
     }
-
-    static average(list) {
-        let sum = 0;
-        for (let i = 0; i < list.length; i++) {
-            const review = list[i];
-            sum += review[1];
-        }
-        return sum / list.length;
+    
+    selectedLabel(label) {
+        this.setState({selectedLabel: label});
     }
 
-    static sum(list) {
-        let sum = 0;
-        for (let i = 0; i < list.length; i++) {
-            const review = list[i];
-            sum += review[1];
-        }
+    loadTopReviews(projectId) {
+        const payload = {
+            app: projectId,
+            limit: this.state.formData.limit,
+            ngrams: this.state.formData.ngrams
+        };
+
+        this.setState({
+            isLoading: true
+        }, function () {
+            const start = Date.now();
+
+            const promise = axios.post(`${Constants.SERVER_URL}/reviews/labels`, payload);
+            promise.then(res => {
+                const labels = res.data;
+                this.setState({
+                    data: this.state.data,
+                    labels: labels,
+                    isLoading: false
+                });
+                const elapsed = (Date.now() - start) / 1000.0;
+
+                const numberOfReviewsForLabels = this.state.labels.reduce((sum, value) => sum + value.reviewCount, 0);
+                this.setState({
+                    responseTime: elapsed,
+                    numberOfReviewsForLabels: numberOfReviewsForLabels
+                });
+            });
+        });
     }
 
     render() {
@@ -124,34 +144,34 @@ class App extends Component {
             return <SelectAProjectComponent/>;
         }
 
-        const reviewCount = this.state.reviewCounts;
+        const reviewCounts = this.state.reviewCounts;
         const avgRatings = this.state.averages;
 
-        let maxRange = new Date();
-        let minRange = new Date();
+        let maxRange = moment();
+        let minRange = moment();
         let reviewsInInterval = 0;
         let averageInInterval = 0.0;
 
         const range = this.state.timeSeriesRange;
         if (range) {
-            minRange = this.state.timeSeriesRange.min;
-            maxRange = this.state.timeSeriesRange.max;
+            minRange = range.min;
+            maxRange = range.max;
 
-            for (let i = 0; i < reviewCount.length; i++) {
-                const review = reviewCount[i];
-                if (review[0] >= minRange && review[0] <= maxRange) {
-                    reviewsInInterval += review[1];
-                }
-            }
+            const rangeFilter = (review => review[0] >= minRange && review[0] <= maxRange);
 
-            const ratingsInInterval = avgRatings.filter(review => review[0] >= minRange && review[0] <= maxRange);
-            averageInInterval = App.average(ratingsInInterval);
-        } else if (this.state.reviewCounts.length > 0) {
-            minRange = new Date(this.state.reviewCounts[0][0]);
-            maxRange = new Date(this.state.reviewCounts[this.state.reviewCounts.length - 1][0]);
-            reviewsInInterval = App.sum(this.state.reviewCounts.length);
+            reviewsInInterval = reviewCounts
+                .filter(rangeFilter)
+                .map(review => review[1])
+                .reduce(add, 0);
 
-            averageInInterval = App.average(this.state.averages);
+            const ratingsInInterval = avgRatings.filter(rangeFilter);
+            averageInInterval = average(ratingsInInterval);
+        } else if (reviewCounts.length > 0) {
+            minRange = reviewCounts[0][0];
+            maxRange = reviewCounts[reviewCounts.length - 1][0];
+
+            reviewsInInterval = reviewCounts.map(item => item[1]).reduce(add, 0);
+            averageInInterval = average(avgRatings);
         }
 
         return (
@@ -170,13 +190,13 @@ class App extends Component {
                             <div className={"row"}>
                                 <div className={"col-md-2"}>
                                     <h5>Interval: <br/>
-                                        {minRange.toDateString()} - {maxRange.toDateString()}</h5>
+                                        {moment(minRange).format('L')} - {moment(maxRange).format('L')}</h5>
                                     <h6># Reviews: {reviewsInInterval}</h6>
                                     <h6>Avg rating: {averageInInterval.toFixed(2)}</h6>
                                 </div>
 
                                 <div className={"col-md-10"}>
-                                    <TimeSeries averages={avgRatings} reviewCounts={reviewCount}
+                                    <TimeSeries averages={avgRatings} reviewCounts={reviewCounts}
                                                 onRangeSet={(range) => this.onRangeSet(range)}/>
                                 </div>
                             </div>
@@ -230,41 +250,17 @@ class App extends Component {
             </div>
         );
     }
+}
 
-    selectedLabel(label) {
-        this.setState({selectedLabel: label});
-    }
+const add = (a, b) => a + b;
 
-    loadTopReviews(projectId) {
-        const payload = {
-            app: projectId,
-            limit: this.state.formData.limit,
-            ngrams: this.state.formData.ngrams
-        };
+function average(list) {
+    const sum = list.map(item => item[1]).reduce(add, 0);
+    return sum / list.length;
+}
 
-        this.setState({
-            isLoading: true
-        }, function () {
-            const start = Date.now();
-
-            const promise = axios.post(`${Constants.SERVER_URL}/reviews/labels`, payload);
-            promise.then(res => {
-                const labels = res.data;
-                this.setState({
-                    data: this.state.data,
-                    labels: labels,
-                    isLoading: false
-                });
-                const elapsed = (Date.now() - start) / 1000.0;
-
-                const numberOfReviewsForLabels = this.state.labels.reduce((sum, value) => sum + value.reviewCount, 0);
-                this.setState({
-                    responseTime: elapsed,
-                    numberOfReviewsForLabels: numberOfReviewsForLabels
-                });
-            });
-        });
-    }
+function isoStringToMillis(isoDate) {
+    return moment(isoDate).unix() * 1000;
 }
 
 export default App;
