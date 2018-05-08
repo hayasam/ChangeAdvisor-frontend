@@ -41,7 +41,7 @@ class AppRouter extends Component {
 
     componentDidMount() {
         const isServerUpPromise = axios.get(`${Constants.SERVER_URL}/is-up`);
-        isServerUpPromise.then(response => {
+        isServerUpPromise.then(() => {
             this.setState({isServerUp: true});
         }).catch(error => {
             this.setState({isServerUp: false});
@@ -50,13 +50,8 @@ class AppRouter extends Component {
     }
 
     projectSelected(projectId) {
-        this.loadProject(projectId);
-    }
-
-    loadProject(projectId) {
         const loadProject = axios.get(`${Constants.SERVER_URL}/projects/${projectId}`);
         loadProject.then(response => {
-            console.log(response.data);
             this.setState({isServerUp: true, selectedProject: response.data});
         }).catch(error => {
             this.setState({isServerUp: false});
@@ -65,11 +60,9 @@ class AppRouter extends Component {
     }
 
     gotoClassesClicked(params) {
-        const payload = params.payload;
-        const label = params.label;
+        const {payload, label} = params;
         params.isLoading = true;
 
-        console.log(params);
         const propsForLinkingResults = {params};
         this.setState({propsForLinkingResults: propsForLinkingResults});
 
@@ -113,7 +106,12 @@ class AppRouter extends Component {
                         <Route path='/settings' render={() => <ProjectSettings project={project}/>}/>
                         <Route path='/new' render={() => <ProjectSettings project={emptyProject}/>}/>
                         <Route path='/results'
-                               render={() => (<LinkingResults params={propsForLinkingResults}/>)}/>
+                               render={() => {
+                                   if (!propsForLinkingResults) {
+                                       return <Redirect to={"/"}/>
+                                   }
+                                   return <LinkingResults params={propsForLinkingResults}/>;
+                               }}/>
                         <Route render={() => <Redirect to="/"/>}/>
                     </Switch>
                     }
