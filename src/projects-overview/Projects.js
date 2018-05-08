@@ -1,11 +1,31 @@
 import React, {Component} from 'react';
-import ProjectSelect from "./project-select/ProjectSelect";
+import {ProjectSelect} from "./project-select/ProjectSelect";
 import './Projects.css';
 import {Link} from "react-router-dom";
+import Constants from "../Constants";
+import axios from "axios/index";
 
-class Projects extends Component {
+export default class Projects extends Component {
+
+    constructor() {
+        super();
+
+        this.state = {
+            projects: []
+        }
+    }
+
+    componentDidMount() {
+        const projectsUrl = `${Constants.SERVER_URL}/projects`;
+        const promise = axios.get(projectsUrl);
+        promise.then(res => {
+            const responseBody = res.data;
+            this.setState({projects: responseBody});
+        });
+    }
 
     render() {
+        const {projects} = this.state;
         return (
             <div className={"col-md-12"}>
                 <div className={"row"}>
@@ -17,12 +37,10 @@ class Projects extends Component {
                         </div>
                     </div>
                     <div className={"col-md-6"}>
-                        <ProjectSelect projectSelected={(id) => this.props.projectSelected(id)}/>
+                        <ProjectSelect projects={projects} projectSelected={(id) => this.props.projectSelected(id)}/>
                     </div>
                 </div>
             </div>
         )
     }
 }
-
-export default Projects;

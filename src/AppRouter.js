@@ -16,11 +16,11 @@ import Constants from "./Constants";
 // when the pathname is exactly the string "/"
 
 const emptyProject = {
-    appName : '',
-    googlePlayId : '',
-    path : '',
-    remoteUrl : '',
-    cronSchedule : ''
+    appName: '',
+    googlePlayId: '',
+    path: '',
+    remoteUrl: '',
+    cronSchedule: ''
 };
 
 class AppRouter extends Component {
