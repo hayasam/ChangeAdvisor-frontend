@@ -101,7 +101,7 @@ class App extends Component {
     onRangeSet(range) {
         this.setState({timeSeriesRange: range})
     }
-    
+
     selectedLabel(label) {
         this.setState({selectedLabel: label});
     }

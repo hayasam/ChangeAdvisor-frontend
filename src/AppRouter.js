@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Route, Switch} from 'react-router-dom'
+import {Redirect, Route, Switch} from 'react-router-dom'
 import ProjectSettings from './project-settings/ProjectSettings'
 import App from "./app/App";
 import './AppRouter.css'
@@ -114,6 +114,7 @@ class AppRouter extends Component {
                         <Route path='/new' render={() => <ProjectSettings project={emptyProject}/>}/>
                         <Route path='/results'
                                render={() => (<LinkingResults params={propsForLinkingResults}/>)}/>
+                        <Route render={() => <Redirect to="/"/>}/>
                     </Switch>
                     }
                 </div>
