@@ -16,8 +16,13 @@
     position: relative;
     z-index: 10;
     padding: 15px 20px 0;
+    width: 100%;
 }
 
 .project-card-dates {
     margin-left: 20px;
+}
+
+.close:hover {
+    cursor: pointer;
 }
