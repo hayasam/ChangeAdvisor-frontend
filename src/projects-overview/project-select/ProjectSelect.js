@@ -9,7 +9,6 @@ export const ProjectSelect = ({projects, projectSelected}) => {
             {
                 projects.map(project => {
                         const {id: projectId, appName} = project;
-                        console.log(projectId);
                         return <ProjectCard key={projectId} projectId={projectId}
                                             project={project} appName={appName}
                                             projectSelected={(id) => projectSelected(id)}/>
