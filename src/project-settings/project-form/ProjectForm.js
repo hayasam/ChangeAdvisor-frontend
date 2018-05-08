@@ -59,7 +59,6 @@ class ProjectForm extends Component {
     }
 
     render() {
-        console.log(this.state.project);
         return (
             <div className={"card card-shadow"}>
                 <div className={"card-body"}>
