@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "axios": "^0.16.2",
+    "axios": "^0.21.1",
     "bootstrap": "^4.0.0-beta",
     "component-horizontal-stacked-bar": "^2.0.1",
     "d3": "^4.10.2",
@@ -15,11 +15,11 @@
     "react-dom": "^15.6.1",
     "react-easy-chart": "^0.3.0",
     "react-highcharts": "^13.0.0",
-    "react-jsx-highstock": "^2.0.1",
+    "react-jsx-highstock": "^3.0.0",
     "react-loading-overlay": "^0.2.8",
     "react-overlay-loading": "^1.0.3",
     "react-router-dom": "^4.2.2",
-    "react-scripts": "1.0.13",
+    "react-scripts": "5.0.0",
     "react-svg-piechart": "^1.4.0",
     "react-table": "^6.6.0",
     "rumble-charts": "^1.4.1"
